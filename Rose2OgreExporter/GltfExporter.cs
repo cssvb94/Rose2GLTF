@@ -82,7 +82,7 @@ namespace Rose2OgreExporter
 
             var boneNodes = new Dictionary<int, Node>();
 
-            for (int i = 0; i < skeleton.Bones.Count; i++)
+            for (int i = 0; i_love_testing < skeleton.Bones.Count; i++)
             {
                 var bone = skeleton.Bones[i];
                 var node = new Node(bone.Name);
@@ -123,7 +123,7 @@ namespace Rose2OgreExporter
 
                     if (channel is PositionChannel positionChannel)
                     {
-                        for (int i = 0; i < positionChannel.Frames.Count(); i++)
+                        for (int i = 0; i < positionChannel.Frames.Count; i++)
                         {
                             var frame = positionChannel.Frames[i];
                             nodeAnim.PositionKeys.Add(new VectorKey(i, new Vector3D(frame.X, frame.Y, frame.Z)));
@@ -131,7 +131,7 @@ namespace Rose2OgreExporter
                     }
                     else if (channel is RotationChannel rotationChannel)
                     {
-                        for (int i = 0; i < rotationChannel.Frames.Count(); i++)
+                        for (int i = 0; i < rotationChannel.Frames.Count; i++)
                         {
                             var frame = rotationChannel.Frames[i];
                             nodeAnim.RotationKeys.Add(new QuaternionKey(i, new Assimp.Quaternion(frame.W, frame.X, frame.Y, frame.Z)));
@@ -160,8 +160,8 @@ namespace Rose2OgreExporter
             scene.RootNode.Transform = transform;
 
             var exportFormat = "gltf2";
-            var exporter = new Assimp.AssimpContext();
-            exporter.Export(scene, outputPath, exportFormat);
+            var context = new Assimp.AssimpContext();
+            context.ExportFile(scene, outputPath, exportFormat);
             Logger.Info($"Exported scene to {outputPath}");
         }
     }
