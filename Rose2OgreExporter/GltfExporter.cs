@@ -78,7 +78,7 @@ namespace Rose2OgreExporter
                 meshNodes.Add(new Node($"MeshNode_{i}", scene.RootNode) { MeshIndices = { i } });
             }
 
-            scene.RootNode.Children.AddRange(meshNodes);
+            scene.RootNode.Children.AddRange(meshNodes.ToArray());
 
             var boneNodes = new Dictionary<int, Node>();
 
