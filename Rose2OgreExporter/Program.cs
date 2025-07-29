@@ -8,7 +8,6 @@ using NLog.Config;
 using Revise.ZMO;
 using Revise.ZMS;
 using Revise.ZMD;
-using Revise.STL;
 
 namespace Rose2OgreExporter;
 class Program
@@ -17,13 +16,22 @@ class Program
     static async Task<int> Main(string[] args)
     {
         LogManager.Configuration = new XmlLoggingConfiguration("nlog.config");
-        var rootCommand = CommandLine.Create();
+        var rootCommand = new RootCommand
+        {
+            new Option<FileInfo>("--zmd", "Path to the ZMD skeleton file"),
+            new Option<FileInfo[]>("--zmo", "Paths to the ZMO motion files"),
+            new Option<FileInfo[]>("--zms", "Paths to the ZMS mesh files"),
+            new Option<string>("--up", "Up direction (X, Y, or Z)")
+        };
+
         rootCommand.SetHandler(async (zmd, zmo, zms, up) =>
         {
             await Run(zmd, zmo, zms, up);
         },
-            new Option<FileInfo>("--zmd"), new Option<FileInfo[]>("--zmo"),
-            new Option<FileInfo[]>("--zms"), new Option<string>("--up"));
+            rootCommand.Options[0] as Option<FileInfo>,
+            rootCommand.Options[1] as Option<FileInfo[]>,
+            rootCommand.Options[2] as Option<FileInfo[]>,
+            rootCommand.Options[3] as Option<string>);
 
         return await rootCommand.InvokeAsync(args);
     }
@@ -32,27 +40,25 @@ class Program
     {
         try
         {
-            var skeleton = new BoneFile();
-            skeleton.Load(zmdFile.FullName);
+            var skeleton = FileLoader.ReadZmd(zmdFile);
             Logger.Info($"Loaded skeleton with {skeleton.Bones.Count} bones.");
 
             var motions = new List<MotionFile>();
             foreach (var zmoFile in zmoFiles)
             {
-                var motion = new MotionFile();
-                motion.Load(zmoFile.FullName);
+                var motion = FileLoader.ReadZmo(zmoFile);
                 motions.Add(motion);
                 Logger.Info($"Loaded motion with {motion.FrameCount} frames.");
             }
             var meshes = new List<ModelFile>();
             foreach (var zmsFile in zmsFiles)
             {
-                var mesh = new ModelFile();
-                mesh.Load(zmsFile.FullName);
+                var mesh = FileLoader.ReadZms(zmsFile);
                 meshes.Add(mesh);
                 Logger.Info($"Loaded mesh with {mesh.Vertices.Count} vertices.");
             }
-            var outputDirectory = new DirectoryInfo("Output"); if (!outputDirectory.Exists)
+            var outputDirectory = new DirectoryInfo("Output");
+            if (!outputDirectory.Exists)
             {
                 outputDirectory.Create();
             }
