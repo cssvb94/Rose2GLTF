@@ -1,4 +1,5 @@
 using Assimp;
+using Assimp.Exporters;
 using Revise.ZMD;
 using Revise.ZMO;
 using Revise.ZMS;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Numerics;
 using NLog;
 using Revise.ZMO.Channels;
+using Vector3D = Assimp.Vector3D;
 
 namespace Rose2OgreExporter
 {
@@ -89,7 +91,7 @@ namespace Rose2OgreExporter
 
                 var translation = new Vector3D(bone.Translation.X, bone.Translation.Y, bone.Translation.Z);
                 var rotation = new Assimp.Quaternion(bone.Rotation.W, bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z);
-                node.Transform = Assimp.Matrix4x4.FromQuaternion(rotation) * Assimp.Matrix4x4.FromTranslation(translation);
+                node.Transform = new Assimp.Matrix4x4(rotation.GetMatrix()) * Assimp.Matrix4x4.FromTranslation(translation);
             }
 
             for (int i = 0; i < skeleton.Bones.Count; i++)
@@ -159,7 +161,7 @@ namespace Rose2OgreExporter
             scene.RootNode.Transform = transform;
 
             var exportFormat = "gltf2";
-            var exporter = new Assimp.AssimpExporter();
+            var exporter = new AssimpExporter();
             exporter.Export(scene, exportFormat, outputPath);
             Logger.Info($"Exported scene to {outputPath}");
         }
