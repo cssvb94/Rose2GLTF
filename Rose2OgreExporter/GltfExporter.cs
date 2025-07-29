@@ -1,5 +1,4 @@
 using Assimp;
-using Assimp.Export;
 using Revise.ZMD;
 using Revise.ZMO;
 using Revise.ZMS;
