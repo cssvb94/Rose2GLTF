@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using GltfValidator;
 
 namespace Rose2OgreExporter
 {
@@ -7,7 +6,7 @@ namespace Rose2OgreExporter
     {
         public static async Task Validate(string path)
         {
-            await Validator.Validate(path);
+            await GltfValidator.Validation.GltfValidator.Validate(path);
         }
     }
 }
