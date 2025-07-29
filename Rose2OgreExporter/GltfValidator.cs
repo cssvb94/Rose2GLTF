@@ -1,13 +1,13 @@
-using GltfValidator;
-using System.IO;
 using System.Threading.Tasks;
+using GltfValidator;
+
 namespace Rose2OgreExporter
 {
     public class GltfValidator
     {
-        public static async Task Validate(string filePath)
+        public static async Task Validate(string path)
         {
-            var report = await Validator.ValidateAsync(filePath); File.WriteAllText($"{filePath}.report.json", report.ToJson());
+            await Validator.Validate(path);
         }
     }
 }

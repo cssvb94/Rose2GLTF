@@ -5,8 +5,10 @@ using Revise.ZMS;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using NLog;
+using Revise.ZMO.Channels;
 
 namespace Rose2OgreExporter
 {
@@ -46,7 +48,7 @@ namespace Rose2OgreExporter
 
                 foreach (var t in zms.Indices)
                 {
-                    mesh.Faces.Add(new Face(new int[] { t.A, t.B, t.C }));
+                    mesh.Faces.Add(new Face(new int[] { t.X, t.Y, t.Z }));
                 }
 
                 if (zms.BonesEnabled)
@@ -77,30 +79,31 @@ namespace Rose2OgreExporter
 
             scene.RootNode.Children.AddRange(meshNodes);
 
-            foreach (var bone in skeleton.Bones)
+            var boneNodes = new Dictionary<int, Node>();
+
+            for (int i = 0; i < skeleton.Bones.Count; i++)
             {
+                var bone = skeleton.Bones[i];
                 var node = new Node(bone.Name);
-                if (bone.Parent != -1)
-                {
-                    var parentNode = scene.RootNode.FindNode(skeleton.Bones[bone.Parent].Name);
-                    if (parentNode != null)
-                    {
-                        node.Parent = parentNode;
-                        parentNode.Children.Add(node);
-                    }
-                    else
-                    {
-                        scene.RootNode.Children.Add(node);
-                    }
-                }
-                else
-                {
-                    scene.RootNode.Children.Add(node);
-                }
+                boneNodes.Add(i, node);
 
                 var translation = new Vector3D(bone.Translation.X, bone.Translation.Y, bone.Translation.Z);
                 var rotation = new Assimp.Quaternion(bone.Rotation.W, bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z);
-                node.Transform = Matrix4x4.CreateFromQuaternion(new System.Numerics.Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W)) * Matrix4x4.CreateTranslation(new System.Numerics.Vector3(translation.X, translation.Y, translation.Z));
+                node.Transform = Assimp.Matrix4x4.FromQuaternion(rotation) * Assimp.Matrix4x4.FromTranslation(translation);
+            }
+
+            for (int i = 0; i < skeleton.Bones.Count; i++)
+            {
+                var bone = skeleton.Bones[i];
+                if (bone.Parent != -1)
+                {
+                    var parentNode = boneNodes[bone.Parent];
+                    parentNode.Children.Add(boneNodes[i]);
+                }
+                else
+                {
+                    scene.RootNode.Children.Add(boneNodes[i]);
+                }
             }
 
             foreach (var motion in motions)
@@ -140,26 +143,23 @@ namespace Rose2OgreExporter
 
             var upVector = up?.ToUpper() switch
             {
-                "X" => Vector3.UnitX,
-                "Y" => Vector3.UnitY,
-                "Z" => Vector3.UnitZ,
-                _ => Vector3.UnitY,
+                "X" => System.Numerics.Vector3.UnitX,
+                "Y" => System.Numerics.Vector3.UnitY,
+                "Z" => System.Numerics.Vector3.UnitZ,
+                _ => System.Numerics.Vector3.UnitY,
             };
 
-            var lookAt = Matrix4x4.CreateLookAt(Vector3.Zero, upVector, Vector3.UnitZ);
-            var transform = new Matrix4x4(
+            var lookAt = System.Numerics.Matrix4x4.CreateLookAt(System.Numerics.Vector3.Zero, upVector, System.Numerics.Vector3.UnitZ);
+            var transform = new Assimp.Matrix4x4(
                 lookAt.M11, lookAt.M12, lookAt.M13, lookAt.M14,
                 lookAt.M21, lookAt.M22, lookAt.M23, lookAt.M24,
                 lookAt.M31, lookAt.M32, lookAt.M33, lookAt.M34,
                 lookAt.M41, lookAt.M42, lookAt.M43, lookAt.M44
             );
-            scene.RootNode.Transform = new Assimp.Matrix4x4(transform.M11, transform.M12, transform.M13, transform.M14,
-                transform.M21, transform.M22, transform.M23, transform.M24,
-                transform.M31, transform.M32, transform.M33, transform.M34,
-                transform.M41, transform.M42, transform.M43, transform.M44);
+            scene.RootNode.Transform = transform;
 
             var exportFormat = "gltf2";
-            var exporter = new AssimpExporter();
+            var exporter = new Assimp.AssimpExporter();
             exporter.Export(scene, exportFormat, outputPath);
             Logger.Info($"Exported scene to {outputPath}");
         }
