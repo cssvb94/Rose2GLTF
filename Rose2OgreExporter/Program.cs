@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
+using GltfValidator;
 using NLog;
 using NLog.Config;
 using Revise.ZMO;
@@ -67,8 +68,20 @@ class Program
             var outputPath = Path.Combine(outputDirectory.FullName, outputFileName);
             GltfExporter.Export(skeleton, motions, meshes, up, outputPath);
             Logger.Info($"Exported scene to {outputPath}");
-            await GltfValidator.Validate(outputPath);
-            Logger.Info($"Validated {outputPath}");
+
+            var validationResult = await Validator.Validate(outputPath);
+            if (validationResult.Issues.Count > 0)
+            {
+                Logger.Error("glTF validation failed:");
+                foreach (var issue in validationResult.Issues)
+                {
+                    Logger.Error($"  - {issue.Message}");
+                }
+            }
+            else
+            {
+                Logger.Info("glTF validation successful.");
+            }
         }
         catch (Exception ex)
         {
