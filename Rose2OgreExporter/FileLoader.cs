@@ -1,20 +1,31 @@
+using System.IO;
 using Revise.ZMD;
 using Revise.ZMO;
 using Revise.ZMS;
-using System.IO;
-namespace Rose2OgreExporter;
-public class FileLoader
+
+namespace Rose2OgreExporter
 {
-    public static Skeleton ReadZmd(FileInfo file)
+    public class FileLoader
     {
-        using var stream = file.OpenRead(); using var reader = new BinaryReader(stream); return new Skeleton(reader);
-    }
-    public static Motion ReadZmo(FileInfo file)
-    {
-        using var stream = file.OpenRead(); using var reader = new BinaryReader(stream); return new Motion(reader);
-    }
-    public static Mesh ReadZms(FileInfo file)
-    {
-        using var stream = file.OpenRead(); using var reader = new BinaryReader(stream); return new Mesh(reader);
+        public static BoneFile ReadZmd(FileInfo file)
+        {
+            var boneFile = new BoneFile();
+            boneFile.Load(file.FullName);
+            return boneFile;
+        }
+
+        public static MotionFile ReadZmo(FileInfo file)
+        {
+            var motionFile = new MotionFile();
+            motionFile.Load(file.FullName);
+            return motionFile;
+        }
+
+        public static ModelFile ReadZms(FileInfo file)
+        {
+            var modelFile = new ModelFile();
+            modelFile.Load(file.FullName);
+            return modelFile;
+        }
     }
 }
