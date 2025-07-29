@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using GltfValidator;
 using NLog;
 using NLog.Config;
+using NLog.Targets;
 using Revise.ZMO;
 using Revise.ZMS;
 using Revise.ZMD;
@@ -16,7 +17,19 @@ class Program
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
     static async Task<int> Main(string[] args)
     {
-        LogManager.Configuration = new XmlLoggingConfiguration("nlog.config");
+        var config = new LoggingConfiguration();
+
+        // Targets where to log to: File and Console
+        var logfile = new FileTarget("logfile") { FileName = "file.txt" };
+        var logconsole = new ColoredConsoleTarget("logconsole");
+
+        // Rules for mapping loggers to targets
+        config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+        config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+
+        // Apply config
+        LogManager.Configuration = config;
+
         var rootCommand = new RootCommand
         {
             new Option<FileInfo>("--zmd", "Path to the ZMD skeleton file"),
@@ -25,9 +38,9 @@ class Program
             new Option<string>("--up", "Up direction (X, Y, or Z)")
         };
 
-        rootCommand.SetHandler(async (zmd, zmo, zms, up) =>
+        rootCommand.SetHandler((zmd, zmo, zms, up) =>
         {
-            await Run(zmd, zmo, zms, up);
+            Run(zmd, zmo, zms, up);
         },
             rootCommand.Options[0] as Option<FileInfo>,
             rootCommand.Options[1] as Option<FileInfo[]>,
@@ -37,7 +50,7 @@ class Program
         return await rootCommand.InvokeAsync(args);
     }
 
-    private static async Task Run(FileInfo zmdFile, FileInfo[] zmoFiles, FileInfo[] zmsFiles, string up)
+    private static void Run(FileInfo zmdFile, FileInfo[] zmoFiles, FileInfo[] zmsFiles, string up)
     {
         try
         {
@@ -69,13 +82,13 @@ class Program
             GltfExporter.Export(skeleton, motions, meshes, up, outputPath);
             Logger.Info($"Exported scene to {outputPath}");
 
-            var validationResult = await GltfValidator.Validator.Validate(outputPath);
-            if (validationResult.Issues.Count > 0)
+            var validationResult = ValidationReport.Validate(outputPath);
+            if (validationResult.Issues.NumErrors > 0)
             {
                 Logger.Error("glTF validation failed:");
-                foreach (var issue in validationResult.Issues)
+                foreach (var issue in validationResult.Issues.Messages)
                 {
-                    Logger.Error($"  - {issue.Message}");
+                    Logger.Error($"  - {issue.Text}");
                 }
             }
             else

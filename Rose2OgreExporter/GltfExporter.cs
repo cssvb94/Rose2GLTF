@@ -78,7 +78,7 @@ namespace Rose2OgreExporter
                 meshNodes.Add(new Node($"MeshNode_{i}", scene.RootNode) { MeshIndices = { i } });
             }
 
-            scene.RootNode.Children.AddRange(meshNodes);
+            scene.RootNode.Children.AddRange(meshNodes.ToArray());
 
             var boneNodes = new Dictionary<int, Node>();
 
@@ -123,7 +123,7 @@ namespace Rose2OgreExporter
 
                     if (channel is PositionChannel positionChannel)
                     {
-                        for (int i = 0; i < positionChannel.Frames.Count; i++)
+                        for (int i = 0; i < positionChannel.Frames.Count(); i++)
                         {
                             var frame = positionChannel.Frames[i];
                             nodeAnim.PositionKeys.Add(new VectorKey(i, new Vector3D(frame.X, frame.Y, frame.Z)));
@@ -131,7 +131,7 @@ namespace Rose2OgreExporter
                     }
                     else if (channel is RotationChannel rotationChannel)
                     {
-                        for (int i = 0; i < rotationChannel.Frames.Count; i++)
+                        for (int i = 0; i < rotationChannel.Frames.Count(); i++)
                         {
                             var frame = rotationChannel.Frames[i];
                             nodeAnim.RotationKeys.Add(new QuaternionKey(i, new Assimp.Quaternion(frame.W, frame.X, frame.Y, frame.Z)));
@@ -161,7 +161,7 @@ namespace Rose2OgreExporter
 
             var exportFormat = "gltf2";
             var context = new Assimp.AssimpContext();
-            context.ExportFile(scene, outputPath, exportFormat);
+            context.ExportFile(scene, outputPath, exportFormat, PostProcessSteps.ValidateDataStructure);
             Logger.Info($"Exported scene to {outputPath}");
         }
     }
