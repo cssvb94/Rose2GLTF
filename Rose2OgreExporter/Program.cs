@@ -69,13 +69,13 @@ class Program
             GltfExporter.Export(skeleton, motions, meshes, up, outputPath);
             Logger.Info($"Exported scene to {outputPath}");
 
-            var validationResult = await GltfValidator.Validator.Validate(outputPath);
-            if (validationResult.Issues.Count > 0)
+            var validationResult = ValidationReport.Validate(outputPath);
+            if (validationResult.Issues.NumErrors > 0)
             {
                 Logger.Error("glTF validation failed:");
-                foreach (var issue in validationResult.Issues)
+                foreach (var issue in validationResult.Issues.Messages)
                 {
-                    Logger.Error($"  - {issue.Message}");
+                    Logger.Error($"  - {issue.Text}");
                 }
             }
             else
