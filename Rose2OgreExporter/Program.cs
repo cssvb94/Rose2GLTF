@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Threading.Tasks;
-using GltfValidator.Validation;
+using GltfValidator;
 using NLog;
 using NLog.Config;
 using Revise.ZMO;
