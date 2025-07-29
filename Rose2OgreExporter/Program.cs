@@ -25,9 +25,9 @@ class Program
             new Option<string>("--up", "Up direction (X, Y, or Z)")
         };
 
-        rootCommand.SetHandler(async (zmd, zmo, zms, up) =>
+        rootCommand.SetHandler((zmd, zmo, zms, up) =>
         {
-            await Run(zmd, zmo, zms, up);
+            Run(zmd, zmo, zms, up);
         },
             rootCommand.Options[0] as Option<FileInfo>,
             rootCommand.Options[1] as Option<FileInfo[]>,
