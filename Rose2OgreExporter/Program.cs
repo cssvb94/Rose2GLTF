@@ -33,19 +33,25 @@ class Program
     {
         try
         {
-            var skeleton = FileLoader.ReadZmd(zmdFile);
-            Logger.Info($"Loaded skeleton with {skeleton.Bones.Length} bones.");
-            var motions = new List<Motion>();
+            var skeleton = new BoneFile();
+            skeleton.Load(zmdFile.FullName);
+            Logger.Info($"Loaded skeleton with {skeleton.Bones.Count} bones.");
+
+            var motions = new List<MotionFile>();
             foreach (var zmoFile in zmoFiles)
             {
-                var motion = FileLoader.ReadZmo(zmoFile); motions.Add(motion);
-                Logger.Info($"Loaded motion with {motion.Frames} frames.");
+                var motion = new MotionFile();
+                motion.Load(zmoFile.FullName);
+                motions.Add(motion);
+                Logger.Info($"Loaded motion with {motion.FrameCount} frames.");
             }
-            var meshes = new List<Mesh>();
+            var meshes = new List<ModelFile>();
             foreach (var zmsFile in zmsFiles)
             {
-                var mesh = FileLoader.ReadZms(zmsFile); meshes.Add(mesh);
-                Logger.Info($"Loaded mesh with {mesh.Vertices.Length} vertices.");
+                var mesh = new ModelFile();
+                mesh.Load(zmsFile.FullName);
+                meshes.Add(mesh);
+                Logger.Info($"Loaded mesh with {mesh.Vertices.Count} vertices.");
             }
             var outputDirectory = new DirectoryInfo("Output"); if (!outputDirectory.Exists)
             {
