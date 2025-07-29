@@ -161,7 +161,7 @@ namespace Rose2OgreExporter
 
             var exportFormat = "gltf2";
             var context = new Assimp.AssimpContext();
-            context.ExportFile(scene, outputPath, exportFormat);
+            context.ExportFile(scene, outputPath, exportFormat, PostProcessSteps.ValidateDataStructure);
             Logger.Info($"Exported scene to {outputPath}");
         }
     }
