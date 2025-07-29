@@ -153,7 +153,7 @@ namespace Rose2OgreExporter
             var lookAt = System.Numerics.Matrix4x4.CreateLookAt(System.Numerics.Vector3.Zero, upVector, System.Numerics.Vector3.UnitZ);
             var transform = new Assimp.Matrix4x4(
                 lookAt.M11, lookAt.M12, lookAt.M13, lookAt.M14,
-                lookAt.M21, lookAt.M22, lookAt.M23, lookA.M24,
+                lookAt.M21, lookAt.M22, lookAt.M23, lookAt.M24,
                 lookAt.M31, lookAt.M32, lookAt.M33, lookAt.M34,
                 lookAt.M41, lookAt.M42, lookAt.M43, lookAt.M44
             );
