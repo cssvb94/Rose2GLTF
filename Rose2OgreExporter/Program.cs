@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using GltfValidator;
 using NLog;
 using NLog.Config;
+using NLog.Targets;
 using Revise.ZMO;
 using Revise.ZMS;
 using Revise.ZMD;
@@ -16,7 +17,19 @@ class Program
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
     static async Task<int> Main(string[] args)
     {
-        LogManager.Configuration = new XmlLoggingConfiguration("nlog.config");
+        var config = new LoggingConfiguration();
+
+        // Targets where to log to: File and Console
+        var logfile = new FileTarget("logfile") { FileName = "file.txt" };
+        var logconsole = new ColoredConsoleTarget("logconsole");
+
+        // Rules for mapping loggers to targets
+        config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+        config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+
+        // Apply config
+        LogManager.Configuration = config;
+
         var rootCommand = new RootCommand
         {
             new Option<FileInfo>("--zmd", "Path to the ZMD skeleton file"),
@@ -37,7 +50,7 @@ class Program
         return await rootCommand.InvokeAsync(args);
     }
 
-    private static async Task Run(FileInfo zmdFile, FileInfo[] zmoFiles, FileInfo[] zmsFiles, string up)
+    private static void Run(FileInfo zmdFile, FileInfo[] zmoFiles, FileInfo[] zmsFiles, string up)
     {
         try
         {
