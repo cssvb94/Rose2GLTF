@@ -1,5 +1,4 @@
 using Assimp;
-using Assimp.Exporters;
 using Revise.ZMD;
 using Revise.ZMO;
 using Revise.ZMS;
@@ -161,7 +160,7 @@ namespace Rose2OgreExporter
             scene.RootNode.Transform = transform;
 
             var exportFormat = "gltf2";
-            var exporter = new AssimpExporter();
+            var exporter = new Assimp.AssimpContext();
             exporter.Export(scene, exportFormat, outputPath);
             Logger.Info($"Exported scene to {outputPath}");
         }
