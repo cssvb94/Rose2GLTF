@@ -22,9 +22,6 @@
 using Revise.Exceptions;
 using Revise.ZMO.Attributes;
 using Revise.ZMO.Channels;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace Revise.ZMO
@@ -75,7 +72,7 @@ namespace Revise.ZMO
         /// </summary>
         public MotionFile()
         {
-            Channels = new List<MotionChannel>();
+            Channels = [];
             Reset();
         }
 

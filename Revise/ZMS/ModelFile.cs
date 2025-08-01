@@ -19,11 +19,9 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using Revise.Exceptions;
 using Revise.Types;
+using System.Text;
 
 namespace Revise.ZMS
 {
@@ -249,11 +247,11 @@ namespace Revise.ZMS
         /// </summary>
         public ModelFile()
         {
-            BoneTable = new List<short>();
-            Vertices = new List<ModelVertex>();
-            Indices = new List<ShortVector3>();
-            Materials = new List<short>();
-            Strips = new List<short>();
+            BoneTable = [];
+            Vertices = [];
+            Indices = [];
+            Materials = [];
+            Strips = [];
 
             Reset();
         }
