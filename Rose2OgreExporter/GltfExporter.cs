@@ -38,13 +38,14 @@ namespace Rose2OgreExporter
 
                 if (zms.BonesEnabled && skeleton != null)
                 {
-                    foreach (var bone in skeleton.Bones) 
+                    foreach (var bone in skeleton.Bones)
                     {
                         var assimp_bone = new Assimp.Bone { Name = bone.Name };
                         mesh.Bones.Add(assimp_bone);
                     }
 
-                    foreach(var dummy_bone in skeleton.DummyBones)
+                    foreach (var dummy_bone in skeleton.DummyBones)
+
                     {
                         var assimp_dummy_bone = new Assimp.Bone { Name = dummy_bone.Name };
                         mesh.Bones.Add(assimp_dummy_bone);
@@ -94,7 +95,7 @@ namespace Rose2OgreExporter
                             var bone = skeleton.Bones[bone_idx];
                             var assimp_bone = mesh.Bones[bone_idx];
                             assimp_bone.VertexWeights.Add(new VertexWeight(j, vertex.BoneWeights[vertex_bone_idx]));
-                        }                        
+                        }
                     }
                 }
 
@@ -103,36 +104,35 @@ namespace Rose2OgreExporter
                 foreach (var t in zms.Indices)
                     mesh.Faces.Add(new Face([t.X, t.Y, t.Z]));
                 Logger.Info("Faces added");
-/*
-                if (zms.BonesEnabled && skeleton != null)
-                {
-                    for (int j = 0; j < zms.BoneTable.Count; j++)
-                    {
-                        var boneIndex = zms.BoneTable[j];
-                        var bone = skeleton.Bones[boneIndex];
-                        var assimpBone = new Assimp.Bone { Name = bone.Name };
-
-                        for (int k = 0; k < zms.Vertices.Count; k++)
-                        {
-                            var vertex = zms.Vertices[k];
-                            for (int l = 0; l < 4; l++)
-                            {
-                                if (vertex.BoneIndices[l] == j)
+                /*
+                                if (zms.BonesEnabled && skeleton != null)
                                 {
-                                    assimpBone.VertexWeights.Add(new VertexWeight(k, vertex.BoneWeights[l]));
+                                    for (int j = 0; j < zms.BoneTable.Count; j++)
+                                    {
+                                        var boneIndex = zms.BoneTable[j];
+                                        var bone = skeleton.Bones[boneIndex];
+                                        var assimpBone = new Assimp.Bone { Name = bone.Name };
+
+                                        for (int k = 0; k < zms.Vertices.Count; k++)
+                                        {
+                                            var vertex = zms.Vertices[k];
+                                            for (int l = 0; l < 4; l++)
+                                            {
+                                                if (vertex.BoneIndices[l] == j)
+                                                {
+                                                    assimpBone.VertexWeights.Add(new VertexWeight(k, vertex.BoneWeights[l]));
+                                                }
+                                            }
+                                        }
+                                        mesh.Bones.Add(assimpBone);
+                                    }
+                                    Logger.Info("Bones added");
                                 }
-                            }
-                        }
-                        mesh.Bones.Add(assimpBone);
-                    }
-                    Logger.Info("Bones added");
-                }
-*/
+                */
 
                 scene.Meshes.Add(mesh);
                 meshNodes.Add(new Node($"MeshNode_{i}", scene.RootNode) { MeshIndices = { i } });
             }
-
             scene.RootNode.Children.AddRange([.. meshNodes]);
 
             if (skeleton != null)
@@ -146,6 +146,44 @@ namespace Rose2OgreExporter
                     boneNodes.Add(i, node);
 
                     var transform_mat = Matrix4x4.Identity;
+
+                    // TODO: Calculate T-Pose matrix for each bone and inverse matrix
+                    // REF: https://stackoverflow.com/questions/62998968/how-do-i-calculate-the-start-matrix-for-each-bonet-pose-using-collada-and-ope
+
+                    /*
+                    Calculating a node's LocalTransform
+
+                    Each node should have a matrix, called the LocalTransform matrix. This matrix isn't in the DAE file, but is calculated by your software. 
+                    It is basically the accumulation of the Transform matrices of the node, and all its parents.
+
+                    First step is to traverse the node hierarchy.
+
+                    Start at the first node, and calculate the LocalTransform for the node, using the Transform matrix of the node, and the LocalTransform of the parent. 
+                    If the node has no parent, use an identity matrix as the parent's LocalTransform matrix.
+
+                    '''
+                    Node.LocalTransform = ParentNode.LocalTransform * Node.Transform
+                    '''
+
+                    Repeat this process recursively for every child node in this node.
+                    Calculating a bone's FinalTransform matrix
+
+                    Just like a node, a bone should have a FinalTransform matrix. Again, this is not stored in the DAE file, 
+                    it is calculated by your software as part of the render process.
+
+                    For each mesh used, for each bone in that mesh, apply the following algorithm:
+
+                    '''
+                    For each mesh used:
+                        For each bone in mesh:
+                            If a node with the same name exists:
+                                Bone.FinalTransform = Bone.InverseBind * Node.LocalTransform * GlobalInverseTransform
+                            Otherwise:
+                                Bone.FinalTransform = Bone.InverseBind * GlobalInverseTransform
+                    '''
+
+                    We now have the FinalTransform matrix for each bone in the model.
+                    */
 
                     if (i > 0)
                     {
@@ -231,24 +269,26 @@ namespace Rose2OgreExporter
                     }
                 }
             }
-            /*
-                        var upVector = up?.ToUpper() switch
-                        {
-                            "X" => Vector3.UnitX,
-                            "Y" => Vector3.UnitY,
-                            "Z" => Vector3.UnitZ,
-                            _ => Vector3.UnitY,
-                        };
 
-                        var lookAt = System.Numerics.Matrix4x4.CreateLookAt(Vector3.Zero, upVector, Vector3.UnitZ);
-                        var transform = new Assimp.Matrix4x4(
-                            lookAt.M11, lookAt.M12, lookAt.M13, lookAt.M14,
-                            lookAt.M21, lookAt.M22, lookAt.M23, lookAt.M24,
-                            lookAt.M31, lookAt.M32, lookAt.M33, lookAt.M34,
-                            lookAt.M41, lookAt.M42, lookAt.M43, lookAt.M44
-                        );
-                        scene.RootNode.Transform = transform;
+            /*
+            var upVector = up?.ToUpper() switch
+            {
+                "X" => Vector3.UnitX,
+                "Y" => Vector3.UnitY,
+                "Z" => Vector3.UnitZ,
+                _ => Vector3.UnitY,
+            };
+
+            var lookAt = System.Numerics.Matrix4x4.CreateLookAt(Vector3.Zero, upVector, Vector3.UnitZ);
+            var transform = new Assimp.Matrix4x4(
+                lookAt.M11, lookAt.M12, lookAt.M13, lookAt.M14,
+                lookAt.M21, lookAt.M22, lookAt.M23, lookAt.M24,
+                lookAt.M31, lookAt.M32, lookAt.M33, lookAt.M34,
+                lookAt.M41, lookAt.M42, lookAt.M43, lookAt.M44
+            );
+            scene.RootNode.Transform = transform;
             */
+
             var exportFormat = "gltf2";
             var context = new AssimpContext();
 
