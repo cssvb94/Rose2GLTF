@@ -1,15 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.IO;
-using System.Threading.Tasks;
 using GltfValidator;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
 using Revise.ZMO;
 using Revise.ZMS;
-using Revise.ZMD;
+using System;
+using System.Collections.Generic;
+using System.CommandLine;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rose2OgreExporter;
 class Program
@@ -20,11 +20,11 @@ class Program
         var config = new LoggingConfiguration();
 
         // Targets where to log to: File and Console
-        var logfile = new FileTarget("logfile") { FileName = "file.txt" };
+        var logfile = new FileTarget("logfile") { FileName = "file.log" };
         var logconsole = new ColoredConsoleTarget("logconsole");
 
         // Rules for mapping loggers to targets
-        config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+        config.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
         config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
 
         // Apply config
@@ -38,32 +38,37 @@ class Program
             new Option<string>("--up", "Up direction (X, Y, or Z)")
         };
 
-        rootCommand.SetHandler((zmd, zmo, zms, up) =>
-        {
-            Run(zmd, zmo, zms, up);
-        },
-            rootCommand.Options[0] as Option<FileInfo>,
-            rootCommand.Options[1] as Option<FileInfo[]>,
+        rootCommand.SetHandler(Run,
+            rootCommand.Options[0] as Option<FileInfo?>,
+            rootCommand.Options[1] as Option<FileInfo[]?>,
             rootCommand.Options[2] as Option<FileInfo[]>,
             rootCommand.Options[3] as Option<string>);
 
         return await rootCommand.InvokeAsync(args);
     }
 
-    private static void Run(FileInfo zmdFile, FileInfo[] zmoFiles, FileInfo[] zmsFiles, string up)
+    private static void Run(FileInfo? zmdFile, FileInfo[]? zmoFiles, FileInfo[] zmsFiles, string up)
     {
         try
         {
-            var skeleton = FileLoader.ReadZmd(zmdFile);
-            Logger.Info($"Loaded skeleton with {skeleton.Bones.Count} bones.");
+            Revise.ZMD.BoneFile? skeleton = null;
+            if (zmdFile != null)
+            {
+                skeleton = FileLoader.ReadZmd(zmdFile);
+                Logger.Info($"Loaded skeleton with {skeleton.Bones.Count} bones.");
+            }
 
             var motions = new List<MotionFile>();
-            foreach (var zmoFile in zmoFiles)
+            if (zmoFiles != null)
             {
-                var motion = FileLoader.ReadZmo(zmoFile);
-                motions.Add(motion);
-                Logger.Info($"Loaded motion with {motion.FrameCount} frames.");
+                foreach (var zmoFile in zmoFiles)
+                {
+                    var motion = FileLoader.ReadZmo(zmoFile);
+                    motions.Add(motion);
+                    Logger.Info($"Loaded motion with {motion.FrameCount} frames.");
+                }
             }
+
             var meshes = new List<ModelFile>();
             foreach (var zmsFile in zmsFiles)
             {
@@ -77,13 +82,13 @@ class Program
                 outputDirectory.Create();
             }
 
-            var outputFileName = $"{Path.GetFileNameWithoutExtension(zmdFile.Name)}.gltf";
+            var outputFileName = $"{Path.GetFileNameWithoutExtension(zmsFiles.First().Name)}.gltf";
             var outputPath = Path.Combine(outputDirectory.FullName, outputFileName);
             GltfExporter.Export(skeleton, motions, meshes, up, outputPath);
             Logger.Info($"Exported scene to {outputPath}");
 
             var validationResult = ValidationReport.Validate(outputPath);
-            if (validationResult.Issues.NumErrors > 0)
+            if (validationResult!= null && validationResult.Issues.NumErrors > 0)
             {
                 Logger.Error("glTF validation failed:");
                 foreach (var issue in validationResult.Issues.Messages)

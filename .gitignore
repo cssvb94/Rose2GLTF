@@ -55,3 +55,5 @@ nunit-*.xml
 
 .vs/
 Output/
+/Rose2OgreExporter/Properties/launchSettings.json
+/.gitignore
