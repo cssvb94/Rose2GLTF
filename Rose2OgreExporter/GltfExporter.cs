@@ -45,6 +45,7 @@ namespace Rose2OgreExporter
                     }
 
                     foreach (var dummy_bone in skeleton.DummyBones)
+
                     {
                         var assimp_dummy_bone = new Assimp.Bone { Name = dummy_bone.Name };
                         mesh.Bones.Add(assimp_dummy_bone);
@@ -132,7 +133,6 @@ namespace Rose2OgreExporter
                 scene.Meshes.Add(mesh);
                 meshNodes.Add(new Node($"MeshNode_{i}", scene.RootNode) { MeshIndices = { i } });
             }
-
             scene.RootNode.Children.AddRange([.. meshNodes]);
 
             if (skeleton != null)
